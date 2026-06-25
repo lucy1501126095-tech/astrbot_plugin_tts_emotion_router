@@ -59,6 +59,7 @@ from .core.text_splitter import TextSplitter
 from .emotion.classifier import HeuristicClassifier
 from .tts.provider_siliconflow import SiliconFlowTTS
 from .tts.provider_minimax import MiniMaxTTS
+from .tts.provider_elevenlabs import ElevenLabsTTS
 from .utils.audio import ensure_dir, cleanup_dir
 from .utils.extract import CodeAndLinkExtractor, ProcessedText
 
@@ -138,6 +139,21 @@ class TTSEmotionRouter(Star):
     def _create_tts_client(self):
         api_cfg = self.config.get_api_config()
         provider = api_cfg.get("provider", "siliconflow")
+
+        if provider == "elevenlabs":
+            return ElevenLabsTTS(
+                api_key=api_cfg["key"],
+                voice_id=api_cfg.get("voice_id", ""),
+                model_id=api_cfg.get("model_id", "eleven_v3"),
+                api_url=api_cfg.get("url", "https://api.elevenlabs.io"),
+                stability=api_cfg.get("stability", 0.5),
+                similarity_boost=api_cfg.get("similarity_boost", 0.75),
+                style=api_cfg.get("style", 0.0),
+                use_speaker_boost=api_cfg.get("use_speaker_boost", True),
+                output_format=api_cfg.get("output_format", "mp3_44100_128"),
+                max_retries=api_cfg.get("max_retries", 2),
+                timeout=api_cfg.get("timeout", 60),
+            )
 
         if provider == "minimax":
             return MiniMaxTTS(

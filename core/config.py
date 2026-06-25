@@ -239,6 +239,23 @@ class ConfigManager:
             if k not in mm:
                 mm[k] = v
         engine["minimax"] = mm
+
+        el = engine.get("elevenlabs", {}) or {}
+        el_defaults = {
+            "key": "",
+            "voice_id": "",
+            "model_id": "eleven_v3",
+            "url": "https://api.elevenlabs.io",
+            "stability": 0.5,
+            "similarity_boost": 0.75,
+            "style": 0.0,
+            "use_speaker_boost": True,
+            "output_format": "mp3_44100_128",
+        }
+        for k, v in el_defaults.items():
+            if k not in el:
+                el[k] = v
+        engine["elevenlabs"] = el
         self._config["tts_engine"] = engine
 
         # Emotion route
@@ -368,7 +385,7 @@ class ConfigManager:
     def get_tts_provider(self) -> str:
         engine = self.get("tts_engine", {}) or {}
         provider = str(engine.get("provider", DEFAULT_TTS_PROVIDER)).strip().lower()
-        return provider if provider in {"siliconflow", "minimax"} else DEFAULT_TTS_PROVIDER
+        return provider if provider in {"siliconflow", "minimax", "elevenlabs"} else DEFAULT_TTS_PROVIDER
 
     def is_emotion_route_enabled(self) -> bool:
         return bool((self.get("emotion_route", {}) or {}).get("enable", True))
@@ -387,6 +404,35 @@ class ConfigManager:
         provider = self.get_tts_provider()
         timeout = _safe_int(engine.get("timeout"), DEFAULT_API_TIMEOUT)
         max_retries = _safe_int(engine.get("max_retries"), DEFAULT_API_MAX_RETRIES)
+
+        if provider == "elevenlabs":
+            el = engine.get("elevenlabs", {}) or {}
+            return {
+                "provider": "elevenlabs",
+                "key": str(el.get("key", "")),
+                "voice_id": str(el.get("voice_id", "")),
+                "model": str(el.get("model_id", "eleven_v3")),
+                "model_id": str(el.get("model_id", "eleven_v3")),
+                "url": str(el.get("url", "https://api.elevenlabs.io")),
+                "stability": _safe_float(el.get("stability"), 0.5),
+                "similarity_boost": _safe_float(el.get("similarity_boost"), 0.75),
+                "style": _safe_float(el.get("style"), 0.0),
+                "use_speaker_boost": bool(el.get("use_speaker_boost", True)),
+                "output_format": str(el.get("output_format", "mp3_44100_128")),
+                "timeout": timeout,
+                "max_retries": max_retries,
+                "default_voice": str(el.get("voice_id", "")),
+                "format": "mp3",
+                "speed": 1.0,
+                "gain": 0.0,
+                "sample_rate": 44100,
+                "vol": 1.0,
+                "pitch": 0,
+                "emotion": "neutral",
+                "bitrate": 128000,
+                "channel": 1,
+                "subtitle_enable": False,
+            }
 
         if provider == "minimax":
             mm = engine.get("minimax", {}) or {}

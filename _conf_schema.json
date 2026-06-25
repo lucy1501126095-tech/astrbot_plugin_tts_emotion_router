@@ -12,7 +12,7 @@
       "provider": {
         "type": "string",
         "description": "语音服务商",
-        "options": ["siliconflow", "minimax"],
+        "options": ["siliconflow", "minimax", "elevenlabs"],
         "default": "siliconflow"
       },
       "timeout": {
@@ -155,10 +155,65 @@
             "default": false
           }
         }
+      },
+      "elevenlabs": {
+        "type": "object",
+        "description": "ElevenLabs 配置",
+        "condition": {
+          "provider": "elevenlabs"
+        },
+        "items": {
+          "key": {
+            "type": "string",
+            "description": "API Key（xi-api-key）",
+            "default": ""
+          },
+          "voice_id": {
+            "type": "string",
+            "description": "Voice ID（从 ElevenLabs Voice Library 获取）",
+            "default": ""
+          },
+          "model_id": {
+            "type": "string",
+            "description": "模型 ID",
+            "options": ["eleven_v3", "eleven_flash_v2_5", "eleven_multilingual_v2"],
+            "default": "eleven_v3"
+          },
+          "url": {
+            "type": "string",
+            "description": "API 地址",
+            "default": "https://api.elevenlabs.io"
+          },
+          "stability": {
+            "type": "float",
+            "description": "声音稳定性（0~1，越低越有变化）",
+            "default": 0.5
+          },
+          "similarity_boost": {
+            "type": "float",
+            "description": "相似度增强（0~1，越高越接近原声）",
+            "default": 0.75
+          },
+          "style": {
+            "type": "float",
+            "description": "风格化程度（0~1）",
+            "default": 0.0
+          },
+          "use_speaker_boost": {
+            "type": "bool",
+            "description": "启用说话人增强",
+            "default": true
+          },
+          "output_format": {
+            "type": "string",
+            "description": "输出音频格式",
+            "options": ["mp3_44100_128", "mp3_22050_32", "pcm_16000", "pcm_22050", "pcm_24000", "pcm_44100"],
+            "default": "mp3_44100_128"
+          }
+        }
       }
     }
-  },
-  "feature_policies": {
+  }, "feature_policies": {
     "type": "object",
     "description": "功能开关策略（每项都支持 UMO 黑白名单）",
     "items": {
