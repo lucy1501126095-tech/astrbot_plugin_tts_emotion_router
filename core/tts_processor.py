@@ -306,6 +306,8 @@ class TTSProcessor:
         emotion: Optional[str] = None,
     ) -> Optional[Path]:
         """生成 TTS 音频。"""
+        logger.info(f"TTS generate_audio: text_len={len(text)}, voice_uri={voice_uri!r}, speed={speed}, emotion={emotion}")
+        logger.info(f"TTS generate_audio: provider type={type(self.tts).__name__}")
         try:
             audio_path = await self.tts.synth(
                 text,
@@ -316,18 +318,18 @@ class TTSProcessor:
             )
             
             if not audio_path:
-                logger.error("TTS returned empty path")
+                logger.error(f"TTS returned empty path. voice_uri={voice_uri!r}, provider={type(self.tts).__name__}")
                 return None
             
             audio_path = Path(audio_path)
             if not await self.validate_audio_file(audio_path):
-                logger.error("Audio file validation failed")
+                logger.error(f"Audio file validation failed: {audio_path}, size={audio_path.stat().st_size if audio_path.exists() else 'NOT_FOUND'}")
                 return None
             
             return audio_path
             
         except Exception as e:
-            logger.error("TTS generation failed", exc_info=True)
+            logger.error(f"TTS generation failed: {e}, voice_uri={voice_uri!r}, provider={type(self.tts).__name__}", exc_info=True)
             return None
 
     async def validate_audio_file(self, audio_path: Path) -> bool:
