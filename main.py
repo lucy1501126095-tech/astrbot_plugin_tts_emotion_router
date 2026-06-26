@@ -128,13 +128,19 @@ class TTSEmotionRouter(Star):
         voice_map = voice_map or {}
         speed_map = speed_map or {}
 
+        api_cfg = self.config.get_api_config()
+
         default_voice = self.config.get_default_voice()
+        if not default_voice:
+            # Fallback: try voice_id directly from api config
+            default_voice = str(api_cfg.get("voice_id", "") or "")
         if default_voice and not voice_map.get("neutral"):
             voice_map["neutral"] = default_voice
 
-        api_cfg = self.config.get_api_config()
         if "neutral" not in speed_map:
             speed_map["neutral"] = float(api_cfg.get("speed", 1.0))
+
+        logger.info("Resolved voice_map: %s", voice_map)
         return voice_map, speed_map
 
     def _create_single_provider(self, provider_name: str):

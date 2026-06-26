@@ -423,7 +423,11 @@ class ConfigManager:
             if voice_map.get("neutral"):
                 return str(voice_map["neutral"])
         api_cfg = self.get_api_config()
-        return str(api_cfg.get("default_voice", "") or "")
+        # Try default_voice first, then fall back to voice_id
+        voice = str(api_cfg.get("default_voice", "") or "")
+        if not voice:
+            voice = str(api_cfg.get("voice_id", "") or "")
+        return voice
 
     def get_api_config(self) -> Dict[str, Any]:
         engine = self.get("tts_engine", {}) or {}
