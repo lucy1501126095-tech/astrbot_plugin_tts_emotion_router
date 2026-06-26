@@ -256,6 +256,18 @@ class ConfigManager:
             if k not in el:
                 el[k] = v
         engine["elevenlabs"] = el
+
+        lr = engine.get("language_router", {}) or {}
+        lr_defaults = {
+            "enable": False,
+            "chinese_provider": "minimax",
+            "other_provider": "elevenlabs",
+            "threshold": 0.5,
+        }
+        for k, v in lr_defaults.items():
+            if k not in lr:
+                lr[k] = v
+        engine["language_router"] = lr
         self._config["tts_engine"] = engine
 
         # Emotion route
@@ -384,8 +396,22 @@ class ConfigManager:
 
     def get_tts_provider(self) -> str:
         engine = self.get("tts_engine", {}) or {}
+        # If language router is enabled, return special marker
+        lr = engine.get("language_router", {}) or {}
+        if bool(lr.get("enable", False)):
+            return "language_router"
         provider = str(engine.get("provider", DEFAULT_TTS_PROVIDER)).strip().lower()
         return provider if provider in {"siliconflow", "minimax", "elevenlabs"} else DEFAULT_TTS_PROVIDER
+
+    def get_language_router_config(self) -> dict:
+        engine = self.get("tts_engine", {}) or {}
+        lr = engine.get("language_router", {}) or {}
+        return {
+            "enable": bool(lr.get("enable", False)),
+            "chinese_provider": str(lr.get("chinese_provider", "minimax")).strip().lower(),
+            "other_provider": str(lr.get("other_provider", "elevenlabs")).strip().lower(),
+            "threshold": _safe_float(lr.get("threshold"), 0.5),
+        }
 
     def is_emotion_route_enabled(self) -> bool:
         return bool((self.get("emotion_route", {}) or {}).get("enable", True))

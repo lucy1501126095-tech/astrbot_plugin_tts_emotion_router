@@ -211,6 +211,43 @@
             "default": "mp3_44100_128"
           }
         }
+      },
+      "language_router": {
+        "type": "object",
+        "description": "语言路由（开启后按语言自动切换 TTS 服务商）",
+        "items": {
+          "enable": {
+            "type": "bool",
+            "description": "启用语言路由（开启后忽略上方 provider 设置）",
+            "default": false
+          },
+          "chinese_provider": {
+            "type": "string",
+            "description": "中文使用的服务商",
+            "options": ["minimax", "siliconflow"],
+            "default": "minimax",
+            "condition": {
+              "enable": true
+            }
+          },
+          "other_provider": {
+            "type": "string",
+            "description": "非中文使用的服务商",
+            "options": ["elevenlabs", "siliconflow"],
+            "default": "elevenlabs",
+            "condition": {
+              "enable": true
+            }
+          },
+          "threshold": {
+            "type": "float",
+            "description": "中文字符占比阈值（0~1，超过此值走中文服务商）",
+            "default": 0.5,
+            "condition": {
+              "enable": true
+            }
+          }
+        }
       }
     }
   }, "feature_policies": {

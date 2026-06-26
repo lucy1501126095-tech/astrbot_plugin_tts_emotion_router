@@ -60,6 +60,7 @@ from .emotion.classifier import HeuristicClassifier
 from .tts.provider_siliconflow import SiliconFlowTTS
 from .tts.provider_minimax import MiniMaxTTS
 from .tts.provider_elevenlabs import ElevenLabsTTS
+from .tts.provider_language_router import LanguageRouterTTS
 from .utils.audio import ensure_dir, cleanup_dir
 from .utils.extract import CodeAndLinkExtractor, ProcessedText
 
@@ -136,24 +137,87 @@ class TTSEmotionRouter(Star):
             speed_map["neutral"] = float(api_cfg.get("speed", 1.0))
         return voice_map, speed_map
 
+    def _create_single_provider(self, provider_name: str):
+        """Create a single TTS provider by name."""
+        engine = self.config.get("tts_engine", {}) or {}
+        timeout = int(engine.get("timeout", 30))
+        max_retries = int(engine.get("max_retries", 2))
+
+        if provider_name == "elevenlabs":
+            el = engine.get("elevenlabs", {}) or {}
+            return ElevenLabsTTS(
+                api_key=str(el.get("key", "")),
+                voice_id=str(el.get("voice_id", "")),
+                model_id=str(el.get("model_id", "eleven_v3")),
+                api_url=str(el.get("url", "https://api.elevenlabs.io")),
+                stability=float(el.get("stability", 0.5)),
+                similarity_boost=float(el.get("similarity_boost", 0.75)),
+                style=float(el.get("style", 0.0)),
+                use_speaker_boost=bool(el.get("use_speaker_boost", True)),
+                output_format=str(el.get("output_format", "mp3_44100_128")),
+                max_retries=max_retries,
+                timeout=timeout,
+            )
+
+        if provider_name == "minimax":
+            mm = engine.get("minimax", {}) or {}
+            return MiniMaxTTS(
+                api_url=str(mm.get("url", "https://api.minimaxi.com/v1/t2a_v2")),
+                api_key=str(mm.get("key", "")),
+                model=str(mm.get("model", "speech-2.8-hd")),
+                fmt=str(mm.get("audio_format", "mp3")),
+                speed=float(mm.get("speed", 1.0)),
+                voice_id=str(mm.get("voice_id", "")),
+                vol=float(mm.get("vol", 1.0)),
+                pitch=int(mm.get("pitch", 0)),
+                default_emotion=str(mm.get("emotion", "neutral")),
+                sample_rate=int(mm.get("sample_rate", 32000)),
+                bitrate=int(mm.get("bitrate", 128000)),
+                channel=int(mm.get("channel", 1)),
+                subtitle_enable=bool(mm.get("subtitle_enable", False)),
+                pronunciation_dict=mm.get("pronunciation_dict", {}),
+                max_retries=max_retries,
+                timeout=timeout,
+            )
+
+        # Default: siliconflow
+        sf = engine.get("siliconflow", {}) or {}
+        api_cfg = self.config.get_api_config()
+        return SiliconFlowTTS(
+            api_cfg["url"],
+            api_cfg["key"],
+            api_cfg["model"],
+            api_cfg["format"],
+            api_cfg["speed"],
+            gain=api_cfg["gain"],
+            sample_rate=api_cfg["sample_rate"],
+            max_retries=max_retries,
+            timeout=timeout,
+        )
+
     def _create_tts_client(self):
         api_cfg = self.config.get_api_config()
         provider = api_cfg.get("provider", "siliconflow")
 
-        if provider == "elevenlabs":
-            return ElevenLabsTTS(
-                api_key=api_cfg["key"],
-                voice_id=api_cfg.get("voice_id", ""),
-                model_id=api_cfg.get("model_id", "eleven_v3"),
-                api_url=api_cfg.get("url", "https://api.elevenlabs.io"),
-                stability=api_cfg.get("stability", 0.5),
-                similarity_boost=api_cfg.get("similarity_boost", 0.75),
-                style=api_cfg.get("style", 0.0),
-                use_speaker_boost=api_cfg.get("use_speaker_boost", True),
-                output_format=api_cfg.get("output_format", "mp3_44100_128"),
-                max_retries=api_cfg.get("max_retries", 2),
-                timeout=api_cfg.get("timeout", 60),
+        # Language router mode
+        lr_config = self.config.get_language_router_config()
+        if lr_config["enable"]:
+            cn_provider = self._create_single_provider(lr_config["chinese_provider"])
+            other_provider = self._create_single_provider(lr_config["other_provider"])
+            logger.info(
+                "LanguageRouter enabled: Chinese -> %s, Other -> %s, threshold=%.2f",
+                lr_config["chinese_provider"],
+                lr_config["other_provider"],
+                lr_config["threshold"],
             )
+            return LanguageRouterTTS(
+                chinese_provider=cn_provider,
+                other_provider=other_provider,
+                threshold=lr_config["threshold"],
+            )
+
+        if provider == "elevenlabs":
+            return self._create_single_provider("elevenlabs")
 
         if provider == "minimax":
             return MiniMaxTTS(
