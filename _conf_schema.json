@@ -28,9 +28,6 @@
       "siliconflow": {
         "type": "object",
         "description": "SiliconFlow 配置",
-        "condition": {
-          "provider": "siliconflow"
-        },
         "items": {
           "url": {
             "type": "string",
@@ -78,9 +75,6 @@
       "minimax": {
         "type": "object",
         "description": "MiniMax 配置",
-        "condition": {
-          "provider": "minimax"
-        },
         "items": {
           "url": {
             "type": "string",
@@ -159,9 +153,6 @@
       "elevenlabs": {
         "type": "object",
         "description": "ElevenLabs 配置",
-        "condition": {
-          "provider": "elevenlabs"
-        },
         "items": {
           "key": {
             "type": "string",
