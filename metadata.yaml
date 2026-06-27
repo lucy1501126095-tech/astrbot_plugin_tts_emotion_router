@@ -1,7 +1,7 @@
 name: astrbot_plugin_tts_emotion_router
 author: lucy1501126095-tech
-version: 4.0.0
-desc: "多服务商 TTS 插件，支持 MiniMax / ElevenLabs / SiliconFlow，语言路由自动切换，LLM 工具调用。"
+version: 5.0.0
+desc: "MiniMax (中文) + ElevenLabs (非中文) 双 TTS 工具插件"
 repo: https://github.com/lucy1501126095-tech/astrbot_plugin_tts_emotion_router
 entry: main.py
 homepage: https://github.com/lucy1501126095-tech/astrbot_plugin_tts_emotion_router
@@ -10,5 +10,3 @@ tags:
   - tts
   - elevenlabs
   - minimax
-  - siliconflow
-  - language-router
