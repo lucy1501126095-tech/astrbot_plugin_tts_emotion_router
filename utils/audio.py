@@ -4,11 +4,10 @@ from pathlib import Path
 import time
 from typing import List, Optional
 
-from ..core.constants import (
-    AUDIO_CLEANUP_TTL_SECONDS,
-    AUDIO_MIN_VALID_SIZE,
-    AUDIO_VALID_EXTENSIONS,
-)
+# 原 core.constants 中的常量，内联
+AUDIO_CLEANUP_TTL_SECONDS = 3600
+AUDIO_MIN_VALID_SIZE = 1024
+AUDIO_VALID_EXTENSIONS = {".mp3", ".wav", ".opus", ".ogg", ".flac", ".pcm"}
 
 logger = logging.getLogger(__name__)
 
